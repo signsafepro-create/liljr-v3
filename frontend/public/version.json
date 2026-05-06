@@ -1,0 +1,5 @@
+{
+  "version": "3.7.3",
+  "buildDate": "2026-05-07",
+  "changelog": ["Backend online", "All 10 tRPC routers active", "Voice chat ready"]
+}
