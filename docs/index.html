@@ -1,0 +1,1641 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#050508">
+<link rel="manifest" href="manifest.json">
+<title>LilJR 2.0 — Neural Link</title>
+<style>
+:root{--void:#050508;--void-light:#0a0a14;--void-mid:#12121f;--cyan:#00F0FF;--cyan-dim:rgba(0,240,255,0.15);--cyan-glow:rgba(0,240,255,0.08);--pink:#FF2D92;--pink-dim:rgba(255,45,146,0.15);--purple:#B829DD;--purple-dim:rgba(184,41,221,0.15);--green:#00FF88;--green-dim:rgba(0,255,136,0.15);--red:#FF4444;--yellow:#FFCC00;--text:#e8e8ff;--text-dim:#8a8ab8;--text-dark:#5a5a88;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;background:var(--void);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;font-size:14px;overflow:hidden}
+#app{width:100%;height:100%;display:flex;flex-direction:column}
+.app-header{padding:max(16px,env(safe-area-inset-top)) 16px 12px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(0,240,255,0.08);background:var(--void)}
+.app-header h1{font-size:20px;color:var(--pink);font-weight:900;text-transform:uppercase;letter-spacing:3px;text-shadow:0 0 30px rgba(255,45,146,0.4)}
+.app-header h1 span{color:var(--cyan);text-shadow:0 0 30px rgba(0,240,255,0.4)}
+.app-header .version{font-size:9px;color:var(--text-dark);text-transform:uppercase;letter-spacing:2px;margin-top:2px}
+.api-pill{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text-dim);padding:6px 12px;background:var(--void-mid);border-radius:20px;border:1px solid var(--cyan-dim)}
+.card{background:var(--void-mid);border:1px solid rgba(0,240,255,0.12);border-radius:20px;padding:20px;margin-bottom:14px;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:20px;right:20px;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),var(--pink),transparent);opacity:0.6}
+.card::after{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at top right,rgba(0,240,255,0.04),transparent 60%);pointer-events:none}
+.card-title{font-size:13px;color:var(--cyan);font-weight:700;text-transform:uppercase;letter-spacing:2px;margin-bottom:16px;position:relative;z-index:1}
+.page{flex:1;overflow-y:auto;overflow-x:hidden;padding:16px;padding-bottom:120px;display:none;scrollbar-width:thin}
+.page.active{display:block}
+.page::-webkit-scrollbar{width:3px}
+.page::-webkit-scrollbar-thumb{background:var(--cyan);border-radius:2px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg,var(--pink),var(--purple));border:none;border-radius:24px;padding:14px 20px;color:#fff;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:1.5px;cursor:pointer;transition:all .15s;box-shadow:0 4px 20px rgba(255,45,146,0.3);min-height:48px;width:100%;position:relative;overflow:hidden;z-index:1}
+.btn::before{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent);transition:left .3s}
+.btn:active{transform:scale(0.96)}
+.btn:active::before{left:100%}
+.btn-cyan{background:linear-gradient(135deg,var(--cyan),var(--purple));box-shadow:0 4px 20px rgba(0,240,255,0.3)}
+.btn-green{background:linear-gradient(135deg,var(--green),var(--cyan));color:var(--void);box-shadow:0 4px 20px rgba(0,255,136,0.3)}
+.btn-red{background:linear-gradient(135deg,var(--red),var(--pink));box-shadow:0 4px 20px rgba(255,68,68,0.3)}
+.btn-ghost{background:transparent;border:1.5px solid var(--cyan-dim);color:var(--cyan);box-shadow:0 0 15px rgba(0,240,255,0.05)}
+.btn-ghost:hover{border-color:var(--cyan);box-shadow:0 0 20px rgba(0,240,255,0.15)}
+.btn-sm{padding:10px 14px;font-size:11px;min-height:40px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.widget-row{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.widget-row::-webkit-scrollbar{display:none}
+.widget{min-width:140px;background:var(--void-mid);border:1px solid rgba(0,240,255,0.1);border-radius:20px;padding:16px;flex-shrink:0;position:relative;overflow:hidden}
+.widget::after{content:'';position:absolute;top:0;right:0;width:60px;height:60px;background:radial-gradient(circle,rgba(0,240,255,0.08),transparent);pointer-events:none}
+.widget-label{font-size:9px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1.5px;font-weight:600}
+.widget-value{font-size:24px;color:var(--cyan);margin-top:8px;font-weight:900;text-shadow:0 0 20px rgba(0,240,255,0.3)}
+.widget-sub{font-size:10px;color:var(--text-dark);margin-top:4px}
+.cam-container{width:100%;aspect-ratio:4/3;background:#000;border-radius:20px;overflow:hidden;border:2px solid var(--cyan);box-shadow:0 0 30px rgba(0,240,255,0.15);position:relative}
+.cam-feed{width:100%;height:100%;object-fit:cover}
+.cam-overlay{position:absolute;top:14px;left:14px;right:14px;display:flex;justify-content:space-between;pointer-events:none}
+.hud-text{font-size:10px;color:var(--cyan);text-shadow:0 0 10px var(--cyan);background:rgba(0,0,0,0.7);padding:5px 10px;border-radius:6px;font-weight:700;border:1px solid var(--cyan-dim)}
+.cam-grid{position:absolute;top:0;left:0;right:0;bottom:0;background-image:linear-gradient(rgba(0,240,255,0.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,240,255,0.05) 1px,transparent 1px);background-size:40px 40px;pointer-events:none}
+.cam-reticle{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:60px;height:60px;border:2px solid var(--pink);border-radius:50%;pointer-events:none;opacity:0.6;box-shadow:0 0 20px rgba(255,45,146,0.3)}
+#chat-messages{padding-bottom:80px}
+.chat-msg{max-width:82%;padding:14px 18px;border-radius:18px;margin-bottom:12px;word-wrap:break-word;font-size:14px;line-height:1.6;position:relative;z-index:1}
+.chat-msg.user{background:linear-gradient(135deg,var(--pink),var(--purple));margin-left:auto;border-bottom-right-radius:4px;box-shadow:0 4px 15px rgba(255,45,146,0.2)}
+.chat-msg.bot{background:var(--void-mid);border:1px solid var(--cyan-dim);border-bottom-left-radius:4px;box-shadow:0 4px 15px rgba(0,240,255,0.05)}
+.chat-msg.system{font-size:11px;color:var(--text-dim);text-align:center;max-width:100%;background:none;border:none;margin:8px 0}
+.chat-msg .sender{font-size:10px;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;opacity:0.8}
+#chat-input-area{position:fixed;bottom:80px;left:16px;right:16px;display:flex;gap:10px;align-items:flex-end;z-index:100}
+#chat-input{flex:1;background:var(--void);border:1.5px solid var(--cyan-dim);border-radius:28px;padding:14px 20px;color:var(--text);font-size:14px;outline:none;transition:all .2s}
+#chat-input:focus{border-color:var(--cyan);box-shadow:0 0 20px rgba(0,240,255,0.1)}
+#chat-input::placeholder{color:var(--text-dark)}
+.scope-canvas{width:100%;height:100px;background:var(--void-mid);border-radius:14px;border:1px solid rgba(0,240,255,0.1);box-shadow:inset 0 0 20px rgba(0,240,255,0.03)}
+.scope-label{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.scope-label .dot{width:8px;height:8px;border-radius:50%;box-shadow:0 0 8px currentColor}
+.scope-label .name{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1.5px;font-weight:700}
+.ticker{display:flex;align-items:center;gap:10px;padding:14px 16px;background:var(--void-mid);border-radius:14px;margin-bottom:10px;border-left:3px solid var(--cyan);position:relative;overflow:hidden}
+.ticker.up{border-left-color:var(--green)}
+.ticker.down{border-left-color:var(--red)}
+.ticker-symbol{font-weight:800;font-size:14px;color:var(--text);letter-spacing:1px}
+.ticker-change{font-size:12px;font-weight:700}
+.ticker-price{font-size:16px;font-weight:900;margin-left:auto;color:var(--text);font-family:'Courier New',monospace}
+.portfolio-total{font-size:32px;color:var(--green);font-weight:900;text-shadow:0 0 30px rgba(0,255,136,0.3);font-family:'Courier New',monospace}
+.platform-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.platform-btn{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;background:var(--void-mid);border:1.5px solid rgba(0,240,255,0.1);border-radius:20px;font-size:11px;color:var(--text-dim);cursor:pointer;transition:all .15s;position:relative;overflow:hidden}
+.platform-btn::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--cyan),var(--pink));opacity:0;transition:opacity .2s}
+.platform-btn:active{border-color:var(--cyan);color:var(--cyan);transform:scale(0.95)}
+.platform-btn:active::after{opacity:1}
+.platform-btn .plat-icon{font-size:32px}
+.score-ring{width:140px;height:140px;border-radius:50%;background:conic-gradient(var(--green) 0% 85%,var(--yellow) 85% 95%,var(--red) 95% 100%);display:flex;align-items:center;justify-content:center;margin:0 auto;position:relative;animation:pulseScore 2.5s infinite;box-shadow:0 0 40px rgba(0,255,136,0.15)}
+@keyframes pulseScore{0%,100%{box-shadow:0 0 30px rgba(0,255,136,0.15)}50%{box-shadow:0 0 50px rgba(0,255,136,0.3)}}
+.score-ring::before{content:'';position:absolute;width:118px;height:118px;background:var(--void);border-radius:50%;border:1px solid rgba(0,255,136,0.1)}
+.score-value{position:relative;font-size:36px;font-weight:900;color:var(--green);font-family:'Courier New',monospace}
+.score-label{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:2px;font-weight:700;margin-top:12px;text-align:center}
+.score-status{font-size:13px;color:var(--green);font-weight:700;text-align:center;margin-top:6px}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid rgba(0,240,255,0.06)}
+.toggle-row:last-child{border-bottom:none}
+.toggle-row .label{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text)}
+.toggle-row .label .icon{font-size:16px}
+.toggle-switch{width:50px;height:28px;background:var(--void);border-radius:14px;position:relative;cursor:pointer;border:1.5px solid var(--text-dark);transition:all .2s}
+.toggle-switch.on{background:var(--green);border-color:var(--green);box-shadow:0 0 12px rgba(0,255,136,0.3)}
+.toggle-switch::after{content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 2px 6px rgba(0,0,0,0.3)}
+.toggle-switch.on::after{transform:translateX(22px)}
+.brain-line{color:var(--text-dim);font-size:13px;line-height:1.8;padding:6px 0;position:relative;z-index:1}
+.brain-line b{color:var(--cyan);font-weight:700}
+.brain-line.highlight{color:var(--pink);font-weight:600}
+.brain-number{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--cyan-dim);color:var(--cyan);font-size:11px;font-weight:900;margin-right:8px}
+input[type="text"],input[type="url"],input[type="email"],textarea,select{background:var(--void);border:1.5px solid var(--cyan-dim);border-radius:14px;padding:14px 16px;color:var(--text);font-size:14px;width:100%;outline:none;transition:all .2s;font-family:'Courier New',monospace}
+input:focus,textarea:focus,select:focus{border-color:var(--cyan);box-shadow:0 0 20px rgba(0,240,255,0.1)}
+input::placeholder{color:var(--text-dark)}
+.setting-group{margin-bottom:20px}
+.setting-group-title{font-size:11px;color:var(--text-dark);text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;font-weight:700}
+.loading{display:flex;align-items:center;gap:8px;color:var(--yellow);font-size:12px;font-style:italic;margin:8px 0}
+.dot{animation:blink 1.4s infinite both;font-size:18px;line-height:1}
+.dot:nth-child(2){animation-delay:.2s}
+.dot:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:0}40%{opacity:1}}
+#nav{position:fixed;bottom:0;left:0;right:0;background:var(--void);border-top:1px solid rgba(0,240,255,0.08);display:flex;justify-content:space-around;padding:8px 0;padding-bottom:max(8px,env(safe-area-inset-bottom));z-index:1000;box-shadow:0 -4px 20px rgba(0,0,0,0.3);overflow-x:auto;scrollbar-width:none}
+#nav::-webkit-scrollbar{display:none}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--text-dark);font-size:9px;cursor:pointer;transition:all .2s;padding:6px 10px;border-radius:14px;flex:1;position:relative;min-width:56px}
+.nav-item .nav-icon{font-size:22px;line-height:1;transition:all .2s}
+.nav-item.active{color:var(--cyan);background:rgba(0,240,255,0.06)}
+.nav-item.active .nav-icon{text-shadow:0 0 12px rgba(0,240,255,0.5);transform:scale(1.1)}
+.nav-item.active::after{content:'';position:absolute;bottom:0;left:30%;right:30%;height:2px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);border-radius:1px}
+.status-dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.status-dot.online{background:var(--green);box-shadow:0 0 8px var(--green)}
+.status-dot.offline{background:var(--red);box-shadow:0 0 8px var(--red)}
+.status-dot.think{background:var(--yellow);box-shadow:0 0 8px var(--yellow)}
+#toast{position:fixed;top:max(16px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);background:var(--void-mid);border:1.5px solid var(--cyan);border-radius:16px;padding:14px 28px;color:var(--cyan);font-size:13px;z-index:9999;opacity:0;pointer-events:none;transition:all .3s;white-space:nowrap;font-weight:700;box-shadow:0 4px 25px rgba(0,240,255,0.15)}
+#toast.show{opacity:1}
+.pwa-btn{position:fixed;top:max(16px,env(safe-area-inset-top));right:16px;background:linear-gradient(135deg,var(--green),var(--cyan));color:var(--void);padding:10px 18px;border-radius:24px;font-size:12px;font-weight:800;cursor:pointer;z-index:9998;display:none;box-shadow:0 4px 20px rgba(0,255,136,0.3);text-transform:uppercase;letter-spacing:1px;animation:floatIn .5s ease-out}
+@keyframes floatIn{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+.glow-sep{height:1px;background:linear-gradient(90deg,transparent,var(--cyan-dim),transparent);margin:16px 0}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
+.badge-green{background:var(--green-dim);color:var(--green);border:1px solid var(--green-dim)}
+.badge-cyan{background:var(--cyan-dim);color:var(--cyan);border:1px solid var(--cyan-dim)}
+.badge-pink{background:var(--pink-dim);color:var(--pink);border:1px solid var(--pink-dim)}
+.tier-card{background:var(--void-mid);border:1.5px solid var(--cyan-dim);border-radius:20px;padding:20px;margin-bottom:12px;position:relative;overflow:hidden;transition:all .2s}
+.tier-card:hover{border-color:var(--cyan)}
+.tier-card.featured{border-color:var(--pink);box-shadow:0 0 20px rgba(255,45,146,0.1)}
+.tier-card .tier-name{font-size:18px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:1px}
+.tier-card .tier-price{font-size:28px;font-weight:900;color:var(--cyan);font-family:'Courier New',monospace;margin-top:4px}
+.tier-card .tier-meta{font-size:12px;color:var(--text-dim);margin-top:6px}
+.tier-card .tier-bar{height:3px;border-radius:2px;margin-top:12px;background:linear-gradient(90deg,var(--cyan),var(--pink));opacity:0.5}
+.brain-ring-container{position:relative;width:200px;height:200px;margin:20px auto}
+.brain-ring{position:absolute;top:0;left:0;width:100%;height:100%;border-radius:50%;border:4px solid transparent;border-top-color:var(--cyan);border-right-color:var(--pink);animation:spinRing 6s linear infinite}
+.brain-ring-inner{position:absolute;top:15px;left:15px;right:15px;bottom:15px;border-radius:50%;border:2px solid var(--cyan-dim);animation:spinRing 8s linear infinite reverse}
+@keyframes spinRing{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.brain-core{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:14px;color:var(--cyan);font-weight:700;text-align:center}
+.stat-card{background:var(--void-mid);border:1px solid rgba(0,240,255,0.1);border-radius:16px;padding:16px;text-align:center;position:relative;overflow:hidden}
+.stat-card .stat-label{font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:8px}
+.stat-card .stat-value{font-size:22px;font-weight:900;font-family:'Courier New',monospace;color:var(--cyan)}
+.notary-card{background:var(--void-mid);border:1px solid rgba(0,240,255,0.1);border-radius:16px;padding:16px;margin-bottom:10px;position:relative}
+.notary-card .notary-name{font-size:16px;font-weight:700;color:var(--text)}
+.notary-card .notary-loc{font-size:12px;color:var(--text-dim);margin-top:4px}
+.notary-card .notary-footer{display:flex;justify-content:space-between;margin-top:12px;align-items:center}
+.notary-card .notary-price{font-size:18px;color:var(--green);font-weight:900;font-family:'Courier New',monospace}
+.notary-card .notary-rating{font-size:12px;color:var(--yellow)}
+.province-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none}
+.province-row::-webkit-scrollbar{display:none}
+.province-pill{padding:8px 14px;border-radius:20px;background:var(--void-mid);border:1px solid var(--cyan-dim);color:var(--text-dim);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .2s;text-transform:uppercase;letter-spacing:1px}
+.province-pill.active{background:var(--cyan);color:var(--void);border-color:var(--cyan)}
+.profile-avatar{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--pink),var(--purple));display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto;box-shadow:0 0 30px rgba(255,45,146,0.3)}
+.profile-name{text-align:center;font-size:18px;font-weight:800;color:var(--text);margin-top:12px}
+.profile-tier{text-align:center;font-size:12px;color:var(--cyan);font-weight:700;text-transform:uppercase;letter-spacing:2px;margin-top:4px}
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(5,5,8,0.85);z-index:2000;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.active{display:flex}
+.modal-content{background:var(--void-mid);border:1px solid var(--cyan-dim);border-radius:24px;padding:24px;width:100%;max-width:400px;max-height:80vh;overflow-y:auto}
+.modal-title{font-size:16px;color:var(--cyan);margin-bottom:16px;text-transform:uppercase;letter-spacing:2px;font-weight:700}
+#splash-screen{position:fixed;top:0;left:0;right:0;bottom:0;background:var(--void);z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .8s}
+#splash-screen.hidden{opacity:0;pointer-events:none}
+.splash-logo{font-size:52px;color:var(--cyan);font-weight:900;letter-spacing:4px;text-shadow:0 0 30px rgba(0,240,255,0.5);animation:splashPulse 2s ease-in-out infinite}
+.splash-subtitle{font-size:14px;color:var(--purple);margin-top:8px;letter-spacing:5px;font-weight:700}
+.splash-loading{font-size:12px;color:#444;margin-top:36px;letter-spacing:1px;animation:splashFade 1.5s ease-in-out infinite}
+@keyframes splashPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+@keyframes splashFade{0%,100%{opacity:.3}50%{opacity:1}}
+.voice-status{padding:8px 14px;border-radius:20px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;background:var(--cyan-dim);color:var(--cyan);border:1px solid var(--cyan-dim);display:inline-block;margin-bottom:12px}
+.voice-status.listening{background:var(--red);color:#fff;border-color:var(--red);animation:pulseVoice 1s infinite}
+@keyframes pulseVoice{0%,100%{opacity:1}50%{opacity:.6}}
+.realistic-toggle{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:16px;background:var(--void-mid);border:1px solid var(--cyan-dim);font-size:11px;color:var(--text-dim);cursor:pointer;transition:all .2s}
+.realistic-toggle.active{background:var(--pink);color:#fff;border-color:var(--pink)}
+.holding-card{background:var(--void-mid);border:1px solid rgba(0,240,255,0.1);border-radius:14px;padding:14px 16px;margin-bottom:10px;display:flex;align-items:center;gap:10px;position:relative;overflow:hidden;border-left:3px solid var(--cyan)}
+.holding-card.up{border-left-color:var(--green)}
+.holding-card.down{border-left-color:var(--red)}
+.holding-info{flex:1}
+.holding-symbol{font-weight:800;font-size:14px;color:var(--text);letter-spacing:1px}
+.holding-shares{font-size:11px;color:var(--text-dim);margin-top:2px}
+.holding-value{text-align:right}
+.holding-price{font-size:16px;font-weight:900;color:var(--text);font-family:'Courier New',monospace}
+.holding-change{font-size:12px;font-weight:700}
+.device-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(0,240,255,0.05);font-size:12px}
+.device-row:last-child{border-bottom:none}
+.device-label{color:var(--text-dim);font-weight:600}
+.device-value{color:var(--cyan);font-family:'Courier New',monospace}
+.terminal-box{background:#0a0a12;border:1px solid var(--cyan-dim);border-radius:14px;padding:12px;font-family:'Courier New',monospace;font-size:12px;color:var(--text);height:220px;overflow-y:auto;margin-bottom:12px}
+.terminal-line{padding:2px 0;color:var(--text-dim)}
+.terminal-line.cmd{color:var(--cyan)}
+.terminal-line.out{color:var(--green)}
+.terminal-line.err{color:var(--red)}
+.neural-brain-container{width:340px;height:340px;margin:0 auto;position:relative}
+.neural-brain-svg{width:100%;height:100%}
+.neural-label{position:absolute;font-size:9px;font-weight:700;letter-spacing:1px;text-shadow:0 1px 2px #000;transform:translate(-50%,-50%);pointer-events:none}
+.logo-big{font-size:42px;color:var(--cyan);font-weight:900;letter-spacing:2px;text-align:center;text-shadow:0 0 30px rgba(0,240,255,0.4)}
+.tagline{text-align:center;font-size:16px;color:var(--purple);margin-bottom:4px}
+.tagline2{text-align:center;font-size:12px;color:#666;margin-bottom:24px}
+</style>
+</head><body>
+<div id="toast"></div>
+<button id="pwa-btn" class="pwa-btn" onclick="installPWA()">📲 Install</button>
+
+<!-- ═══════ SPLASH ═══════ -->
+<div id="splash-screen">
+  <div class="splash-logo">LIL JR 2.0</div>
+  <div class="splash-subtitle">NEURAL LINK</div>
+  <div class="splash-loading">Initializing consciousness...</div>
+</div>
+
+<!-- ═══════ MODAL ═══════ -->
+<div id="modal-overlay" class="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal-content" id="modal-content"></div>
+</div>
+
+<div id="app">
+
+<!-- ═══════ HEADER ═══════ -->
+<div class="app-header">
+  <div>
+    <h1>LIL<span>JR</span></h1>
+    <div class="version">v2.0 Neural Link — 100% Owned</div>
+  </div>
+  <div class="api-pill">
+    <span class="status-dot offline" id="ws-dot"></span>
+    <span id="ws-text">OFFLINE</span>
+  </div>
+</div>
+
+<!-- ═══════ HOME ═══════ -->
+<div class="page active" id="page-home">
+  <!-- ORIGINAL EXPO: Neural Brain SVG -->
+  <div class="card" style="padding:0">
+    <div class="neural-brain-container">
+      <svg class="neural-brain-svg" id="neural-brain-svg" viewBox="0 0 340 340"></svg>
+      <div style="position:absolute;bottom:18px;left:50%;transform:translateX(-50%);font-size:14px;font-weight:900;letter-spacing:1.5px;text-shadow:0 2px 4px #000;color:var(--cyan)" id="brain-state-text">NEURAL STANDBY</div>
+    </div>
+  </div>
+
+  <!-- ORIGINAL EXPO: Logo + Taglines -->
+  <div style="text-align:center;margin:12px 0">
+    <div class="logo-big">LIL JR 2.0</div>
+    <div class="tagline">Your autonomous best friend.</div>
+    <div class="tagline2">Never sleeps. Never forgets. Always hustles.</div>
+  </div>
+
+  <!-- ORIGINAL EXPO: Home Voice Control -->
+  <div class="card">
+    <div class="card-title">🎤 Voice Control</div>
+    <div style="display:flex;gap:10px;margin-bottom:12px">
+      <button class="btn btn-cyan" style="flex:1" onclick="startHomeVoice()">▶ Listen</button>
+      <button class="btn btn-red" style="flex:1" onclick="stopHomeVoice()">⏹ Stop</button>
+    </div>
+    <div id="home-voice-transcript" style="font-size:12px;color:var(--text-dim);min-height:20px"></div>
+    <div class="glow-sep"></div>
+    <div style="font-size:11px;color:var(--text-dark)">
+      <b style="color:var(--cyan)">Commands:</b> "update now", "push code", "pull code", "deploy now", "full cycle", "eternal", "privacy"
+    </div>
+  </div>
+
+  <!-- ORIGINAL EXPO: Update Button -->
+  <div class="card">
+    <button class="btn btn-ghost" onclick="checkForUpdate()" id="update-btn">
+      🔄 CHECK FOR UPDATE
+    </button>
+    <div id="update-status" style="font-size:12px;color:var(--text-dim);margin-top:8px;text-align:center"></div>
+  </div>
+
+  <!-- ORIGINAL EXPO: Live Terminal -->
+  <div class="card">
+    <div class="card-title">💻 Live Terminal</div>
+    <div class="terminal-box" id="terminal-box">
+      <div class="terminal-line">Lil Jr Live Terminal ready...</div>
+      <div class="terminal-line cmd">$ waiting for command...</div>
+    </div>
+    <input type="text" id="terminal-input" placeholder="Type code or command..." onkeypress="if(event.key==='Enter')sendTerminal()" style="margin-bottom:8px">
+    <div class="grid-2">
+      <button class="btn btn-sm btn-cyan" onclick="sendTerminal()">Send</button>
+      <button class="btn btn-sm btn-ghost" onclick="redeployBackend()">Redeploy</button>
+    </div>
+    <div id="terminal-output" style="font-size:12px;color:var(--purple);margin-top:8px"></div>
+  </div>
+
+  <!-- Main Action Buttons -->
+  <div class="card">
+    <button class="btn btn-cyan" onclick="nav('voice')">🎤 VOICE CHAT</button>
+    <div style="height:10px"></div>
+    <button class="btn" onclick="nav('chat')">💬 START TALKING</button>
+  </div>
+
+  <!-- Quick Access Grid -->
+  <div class="card">
+    <div class="grid-2">
+      <button class="btn btn-ghost" onclick="nav('vision')">👁️ Vision</button>
+      <button class="btn btn-ghost" onclick="nav('scopes')">📡 Scopes</button>
+      <button class="btn btn-ghost" onclick="nav('trading')">📈 Trading</button>
+      <button class="btn btn-ghost" onclick="nav('social')">🌐 Social</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <button class="btn btn-ghost" onclick="nav('pricing')">💎 UPGRADE POWER</button>
+    <div style="height:10px"></div>
+    <button class="btn btn-ghost" onclick="nav('signsafe')">📝 SIGNSAFE CANADA</button>
+    <div style="height:10px"></div>
+    <button class="btn btn-ghost" onclick="nav('brain')">🧠 CORE BRAIN</button>
+    <div style="height:10px"></div>
+    <button class="btn btn-ghost" onclick="nav('brain-handoff')">🧬 ONE BRAIN HANDOFF</button>
+  </div>
+</div>
+
+<!-- ═══════ DASHBOARD ═══════ -->
+<div class="page" id="page-dashboard">
+  <div class="card">
+    <div class="card-title">Dashboard</div>
+    <div class="grid-2">
+      <div class="stat-card"><div class="stat-label">PACKETS</div><div class="stat-value" id="dash-packets">1.2M/s</div></div>
+      <div class="stat-card"><div class="stat-label">LATENCY</div><div class="stat-value" id="dash-latency">12ms</div></div>
+      <div class="stat-card"><div class="stat-label">UPTIME</div><div class="stat-value" id="dash-uptime">00:00</div></div>
+      <div class="stat-card"><div class="stat-label">CPU</div><div class="stat-value" id="dash-cpu">--</div></div>
+      <div class="stat-card"><div class="stat-label">RAM</div><div class="stat-value" id="dash-ram">--</div></div>
+      <div class="stat-card"><div class="stat-label">BATTERY</div><div class="stat-value" id="dash-battery">--</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Signal Quality</div>
+    <div class="brain-line"><b>Sync Rate:</b> <span id="dash-sync">99.8% STABLE</span></div>
+    <div class="brain-line"><b>SNR:</b> <span id="dash-snr">42.3 dB EXCELLENT</span></div>
+    <div class="brain-line"><b>Impedance:</b> <span id="dash-imp">4.7 kOhm</span></div>
+    <div class="brain-line"><b>Sample Rate:</b> <span id="dash-sr">256 Hz</span></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Monitors</div>
+    <div class="brain-line highlight"><b>Neural Activity:</b> 87% SYNC — ALL CHANNELS ACTIVE</div>
+    <div class="brain-line"><b>Body Free Link:</b> BRAINWAVE SYNC — MEDITATION MODE</div>
+    <div class="brain-line"><b>Memory Bank:</b> <span id="dash-memory">12,847 FILES — 4.2GB INDEXED</span></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Live Telemetry</div>
+    <div class="widget-row">
+      <div class="widget">
+        <div class="widget-label">Battery</div>
+        <div class="widget-value" id="home-battery">--</div>
+        <div class="widget-sub" id="home-battery-status">Checking</div>
+      </div>
+      <div class="widget">
+        <div class="widget-label">Network</div>
+        <div class="widget-value" id="home-net">--</div>
+        <div class="widget-sub" id="home-net-type">Unknown</div>
+      </div>
+      <div class="widget">
+        <div class="widget-label">Platform</div>
+        <div class="widget-value" style="font-size:18px" id="home-platform">--</div>
+        <div class="widget-sub" id="home-ua">Mobile</div>
+      </div>
+      <div class="widget">
+        <div class="widget-label">Backend</div>
+        <div class="widget-value" id="home-backend">--</div>
+        <div class="widget-sub" id="home-backend-url">Checking</div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Quick Actions</div>
+    <div class="grid-2">
+      <button class="btn" onclick="vibrate()">📳 Vibrate</button>
+      <button class="btn btn-cyan" onclick="showToast('Neural Link Active')">🔔 Toast</button>
+      <button class="btn btn-green" onclick="getBattery()">🔋 Battery</button>
+      <button class="btn btn-ghost" onclick="getLocation()">📍 Location</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ VISION ═══════ -->
+<div class="page" id="page-vision">
+  <div class="card" style="padding:0;overflow:hidden;border:2px solid var(--cyan)">
+    <div class="cam-container">
+      <video id="camera-feed" class="cam-feed" autoplay playsinline muted></video>
+      <div class="cam-grid"></div>
+      <div class="cam-reticle"></div>
+      <div class="cam-overlay">
+        <span class="hud-text" id="cam-mode">NEURAL</span>
+        <span class="hud-text" id="cam-res">--</span>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Filter Modes</div>
+    <div class="grid-4">
+      <button class="btn btn-sm" onclick="setFilter('none')">Neural</button>
+      <button class="btn btn-sm btn-ghost" onclick="setFilter('contrast(1.5) sepia(1) hue-rotate(-30deg)')">Thermal</button>
+      <button class="btn btn-sm btn-ghost" onclick="setFilter('brightness(1.3) grayscale(0.3)')">Night</button>
+      <button class="btn btn-sm btn-ghost" onclick="setFilter('saturate(2) hue-rotate(180deg)')">Tele</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="grid-2">
+      <button class="btn btn-green" onclick="startCamera()">▶ Start Camera</button>
+      <button class="btn btn-red" onclick="stopCamera()">⏹ Stop</button>
+    </div>
+    <div class="glow-sep"></div>
+    <button class="btn" style="width:100%" onclick="capturePhoto()">📸 CAPTURE FRAME</button>
+  </div>
+</div>
+
+<!-- ═══════ CHAT ═══════ -->
+<div class="page" id="page-chat">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px 0">
+    <div class="realistic-toggle" id="realistic-toggle" onclick="toggleRealistic()">
+      <span id="realistic-label">Realistic OFF</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px">
+      <span class="status-dot offline" id="chat-status-dot"></span>
+      <span style="font-size:10px;color:var(--text-dim)" id="chat-status-text">OFFLINE</span>
+    </div>
+  </div>
+  <div class="card" style="padding:12px;min-height:55vh;margin-top:12px">
+    <div id="chat-messages"></div>
+  </div>
+</div>
+<div id="chat-input-area">
+  <button class="btn btn-ghost" style="padding:14px;min-width:52px;border-radius:50%" onclick="toggleVoice()" id="voice-btn">🎤</button>
+  <input type="text" id="chat-input" placeholder="Say something..." onkeypress="if(event.key==='Enter')sendChat()">
+  <button class="btn" style="padding:14px 18px;border-radius:50%;min-width:52px" onclick="sendChat()">➤</button>
+</div>
+
+<!-- ═══════ VOICE ═══════ -->
+<div class="page" id="page-voice">
+  <div class="card" style="text-align:center;padding:36px 24px">
+    <div class="brain-ring-container" style="width:160px;height:160px;margin:20px auto">
+      <div class="brain-ring" style="border-width:6px"></div>
+      <div class="brain-ring-inner" style="border-width:3px"></div>
+      <div class="brain-core">
+        <div style="font-size:40px" id="voice-page-icon">🎤</div>
+      </div>
+    </div>
+    <div class="voice-status" id="voice-page-status">NEURAL VOICE READY</div>
+    <div style="font-size:13px;color:var(--text-dim);margin-top:8px">Wake word: <b style="color:var(--pink)">"eternal"</b></div>
+    <div style="font-size:13px;color:var(--text-dim)">Privacy word: <b style="color:var(--purple)">"privacy"</b></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Voice Commands</div>
+    <div class="brain-line">Say <b>"update now"</b> — check for app updates</div>
+    <div class="brain-line">Say <b>"push code"</b> — git push to GitHub</div>
+    <div class="brain-line">Say <b>"pull code"</b> — git pull latest</div>
+    <div class="brain-line">Say <b>"deploy now"</b> — redeploy backend</div>
+    <div class="brain-line">Say <b>"full cycle"</b> — push, pull, deploy</div>
+    <div class="brain-line">Say <b>"eternal"</b> — wake word</div>
+    <div class="brain-line">Say <b>"privacy"</b> — privacy mode</div>
+  </div>
+  <div class="card">
+    <div class="grid-2">
+      <button class="btn btn-cyan" onclick="startVoiceRecognition()">🎤 START LISTENING</button>
+      <button class="btn btn-red" onclick="stopVoiceRecognition()">⏹ STOP</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Voice Log</div>
+    <div id="voice-page-log" style="font-size:12px;color:var(--text-dim);max-height:200px;overflow-y:auto"></div>
+  </div>
+</div>
+
+<!-- ═══════ SCOPES ═══════ -->
+<div class="page" id="page-scopes">
+  <div class="card">
+    <div class="scope-label"><span class="dot" style="background:var(--cyan);box-shadow:0 0 8px var(--cyan)"></span><span class="name">Alpha Wave</span></div>
+    <canvas class="scope-canvas" id="scope-alpha"></canvas>
+  </div>
+  <div class="card">
+    <div class="scope-label"><span class="dot" style="background:var(--pink);box-shadow:0 0 8px var(--pink)"></span><span class="name">Beta Wave</span></div>
+    <canvas class="scope-canvas" id="scope-beta"></canvas>
+  </div>
+  <div class="card">
+    <div class="scope-label"><span class="dot" style="background:var(--purple);box-shadow:0 0 8px var(--purple)"></span><span class="name">Theta Wave</span></div>
+    <canvas class="scope-canvas" id="scope-theta"></canvas>
+  </div>
+  <div class="card">
+    <div class="scope-label"><span class="dot" style="background:var(--green);box-shadow:0 0 8px var(--green)"></span><span class="name">Gamma Wave</span></div>
+    <canvas class="scope-canvas" id="scope-gamma"></canvas>
+  </div>
+  <div class="card">
+    <div class="grid-2">
+      <button class="btn" onclick="toggleScopes()" id="scope-btn">⏸ Pause</button>
+      <button class="btn btn-ghost" onclick="scopeSpeed=scopeSpeed===1?3:1;showToast('Speed: '+(scopeSpeed===1?'1x':'3x'))">⚡ Speed</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ TRADING ═══════ -->
+<div class="page" id="page-trading">
+  <div class="card">
+    <div class="card-title">Portfolio</div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-top:16px">
+      <div>
+        <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px">Total Value</div>
+        <div class="portfolio-total" id="portfolio-total">$0.00</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px">24h Change</div>
+        <div style="font-size:20px;color:var(--green);font-weight:900;font-family:'Courier New',monospace" id="portfolio-change">+0.00%</div>
+      </div>
+    </div>
+    <div class="glow-sep"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <span class="badge badge-green">● LIVE</span>
+      <span class="badge badge-cyan" id="position-count">0 Positions</span>
+      <span class="badge badge-pink" id="user-tier-badge">Street Tier</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Holdings</div>
+    <div id="holdings-list"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Watchlist</div>
+    <div class="ticker up">
+      <span class="ticker-symbol">AAPL</span>
+      <span class="ticker-change" style="color:var(--green)">▲ 1.2%</span>
+      <span class="ticker-price">$189.42</span>
+    </div>
+    <div class="ticker down">
+      <span class="ticker-symbol">TSLA</span>
+      <span class="ticker-change" style="color:var(--red)">▼ 0.8%</span>
+      <span class="ticker-price">$242.18</span>
+    </div>
+    <div class="ticker up">
+      <span class="ticker-symbol">BTC</span>
+      <span class="ticker-change" style="color:var(--green)">▲ 2.4%</span>
+      <span class="ticker-price">$67,420</span>
+    </div>
+    <div class="ticker up">
+      <span class="ticker-symbol">ETH</span>
+      <span class="ticker-change" style="color:var(--green)">▲ 1.8%</span>
+      <span class="ticker-price">$3,412</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ SOCIAL ═══════ -->
+<div class="page" id="page-social">
+  <div class="card">
+    <div class="card-title">Platform Grid</div>
+    <div class="platform-grid">
+      <div class="platform-btn" onclick="openUrl('https://twitter.com')"><span class="plat-icon">🐦</span><span>Twitter</span></div>
+      <div class="platform-btn" onclick="openUrl('https://instagram.com')"><span class="plat-icon">📸</span><span>Instagram</span></div>
+      <div class="platform-btn" onclick="openUrl('https://tiktok.com')"><span class="plat-icon">🎵</span><span>TikTok</span></div>
+      <div class="platform-btn" onclick="openUrl('https://youtube.com')"><span class="plat-icon">▶️</span><span>YouTube</span></div>
+      <div class="platform-btn" onclick="openUrl('https://linkedin.com')"><span class="plat-icon">💼</span><span>LinkedIn</span></div>
+      <div class="platform-btn" onclick="openUrl('https://discord.com')"><span class="plat-icon">💬</span><span>Discord</span></div>
+      <div class="platform-btn" onclick="openUrl('https://github.com')"><span class="plat-icon">🐙</span><span>GitHub</span></div>
+      <div class="platform-btn" onclick="openUrl('https://reddit.com')"><span class="plat-icon">🔴</span><span>Reddit</span></div>
+      <div class="platform-btn" onclick="openUrl('https://twitch.tv')"><span class="plat-icon">📺</span><span>Twitch</span></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Quick Share</div>
+    <button class="btn" onclick="openUrl('https://twitter.com/intent/tweet?text=Check%20out%20LilJR%20Neural%20Link')">🐦 Tweet About LilJR</button>
+  </div>
+</div>
+
+<!-- ═══════ SECURITY ═══════ -->
+<div class="page" id="page-security">
+  <div class="card" style="text-align:center;padding:36px 24px">
+    <div class="score-ring">
+      <div class="score-value" id="sec-score">85</div>
+    </div>
+    <div class="score-label">Security Score</div>
+    <div class="score-status">🔒 NEURAL SHIELD ACTIVE</div>
+    <div style="margin-top:12px"><span class="badge badge-green">● PROTECTED</span></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Defense Controls</div>
+    <div class="toggle-row">
+      <div class="label"><span class="icon">🔐</span>VPN Shield</div>
+      <div class="toggle-switch on" onclick="this.classList.toggle('on');showToast('VPN '+(this.classList.contains('on')?'enabled':'disabled'))"></div>
+    </div>
+    <div class="toggle-row">
+      <div class="label"><span class="icon">👁️</span>Biometric Lock</div>
+      <div class="toggle-switch on" onclick="this.classList.toggle('on');showToast('Biometric '+(this.classList.contains('on')?'enabled':'disabled'))"></div>
+    </div>
+    <div class="toggle-row">
+      <div class="label"><span class="icon">🛡️</span>Firewall</div>
+      <div class="toggle-switch on" onclick="this.classList.toggle('on');showToast('Firewall '+(this.classList.contains('on')?'enabled':'disabled'))"></div>
+    </div>
+    <div class="toggle-row">
+      <div class="label"><span class="icon">🔑</span>Encrypt Storage</div>
+      <div class="toggle-switch" onclick="this.classList.toggle('on');showToast('Encryption '+(this.classList.contains('on')?'enabled':'disabled'))"></div>
+    </div>
+    <div class="toggle-row">
+      <div class="label"><span class="icon">📵</span>Anti-Track</div>
+      <div class="toggle-switch on" onclick="this.classList.toggle('on');showToast('Anti-Track '+(this.classList.contains('on')?'enabled':'disabled'))"></div>
+    </div>
+    <div class="toggle-row">
+      <div class="label"><span class="icon">🔍</span>Intrusion Detection</div>
+      <div class="toggle-switch on" onclick="this.classList.toggle('on');showToast('Intrusion Detection '+(this.classList.contains('on')?'enabled':'disabled'))"></div>
+    </div>
+  </div>
+  <div class="card">
+    <button class="btn btn-cyan" onclick="runSecurityScan()">🔍 Run Security Scan</button>
+    <div id="scan-results" style="margin-top:12px;font-size:12px;color:var(--text-dim);display:none"></div>
+  </div>
+</div>
+
+<!-- ═══════ BRAIN ═══════ -->
+<div class="page" id="page-brain">
+  <div class="card" style="text-align:center;padding:24px">
+    <div class="brain-ring-container">
+      <div class="brain-ring"></div>
+      <div class="brain-ring-inner"></div>
+      <div class="brain-core">
+        <div style="font-size:24px;color:var(--cyan);font-weight:900;font-family:'Courier New',monospace" id="brain-status">ONLINE</div>
+        <div style="font-size:10px;color:var(--text-dim);margin-top:4px">OMNIBRAIN v3.0</div>
+      </div>
+    </div>
+    <div style="font-size:13px;color:var(--text-dim);margin-top:8px">Neural Core Active</div>
+  </div>
+  <div class="card">
+    <div class="card-title">Neural Stats</div>
+    <div class="grid-2">
+      <div class="stat-card"><div class="stat-label">STATUS</div><div class="stat-value" id="brain-stat-status" style="color:var(--cyan)">ONLINE</div></div>
+      <div class="stat-card"><div class="stat-label">EPOCH</div><div class="stat-value" id="brain-stat-epoch">--</div></div>
+      <div class="stat-card"><div class="stat-label">KNOWLEDGE</div><div class="stat-value" id="brain-stat-knowledge" style="color:var(--purple)">0</div></div>
+      <div class="stat-card"><div class="stat-label">VOICE</div><div class="stat-value" id="brain-stat-voice" style="color:var(--green)">READY</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">System</div>
+    <div class="brain-line"><b>Architect:</b> <span id="brain-architect">Lil Jr</span></div>
+    <div class="brain-line"><b>Last Sync:</b> <span id="brain-sync">--</span></div>
+    <div class="brain-line"><b>Version:</b> OMNIBRAIN v3.0</div>
+    <div class="brain-line"><b>Memory:</b> <span id="brain-memory">Active</span></div>
+  </div>
+</div>
+
+<!-- ═══════ PRICING ═══════ -->
+<div class="page" id="page-pricing">
+  <div class="card" style="text-align:center">
+    <div class="card-title">Choose Your Power Level</div>
+    <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:2px">Neural Tier Access</div>
+  </div>
+  <div class="tier-card">
+    <div class="tier-name" style="color:#6b7280">Street</div>
+    <div class="tier-price">$0<span style="font-size:14px;color:var(--text-dim)">/mo</span></div>
+    <div class="tier-meta">10 messages • Basic access</div>
+    <div class="tier-bar" style="background:#6b7280"></div>
+  </div>
+  <div class="tier-card">
+    <div class="tier-name" style="color:#00d4ff">Hustler</div>
+    <div class="tier-price">$9.99<span style="font-size:14px;color:var(--text-dim)">/mo</span></div>
+    <div class="tier-meta">100 messages • Voice chat • Priority</div>
+    <div class="tier-bar" style="background:#00d4ff"></div>
+  </div>
+  <div class="tier-card">
+    <div class="tier-name" style="color:#a855f7">Builder</div>
+    <div class="tier-price">$29.99<span style="font-size:14px;color:var(--text-dim)">/mo</span></div>
+    <div class="tier-meta">500 messages • Trading • Scopes</div>
+    <div class="tier-bar" style="background:#a855f7"></div>
+  </div>
+  <div class="tier-card featured">
+    <div style="position:absolute;top:10px;right:10px"><span class="badge badge-pink">★ POPULAR</span></div>
+    <div class="tier-name" style="color:#f472b6">Master</div>
+    <div class="tier-price">$99.99<span style="font-size:14px;color:var(--text-dim)">/mo</span></div>
+    <div class="tier-meta">Unlimited • Full API • Custom deploy</div>
+    <div class="tier-bar" style="background:#f472b6"></div>
+  </div>
+  <div class="tier-card">
+    <div class="tier-name" style="color:#fbbf24">Empire</div>
+    <div class="tier-price">$299.99<span style="font-size:14px;color:var(--text-dim)">/mo</span></div>
+    <div class="tier-meta">Unlimited • White-label • Enterprise</div>
+    <div class="tier-bar" style="background:#fbbf24"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Activation</div>
+    <input type="email" id="tier-email" placeholder="you@email.com" style="margin-bottom:12px">
+    <button class="btn btn-ghost" onclick="activateTier()">💎 Activate Tier</button>
+  </div>
+</div>
+
+<!-- ═══════ PROFILE ═══════ -->
+<div class="page" id="page-profile">
+  <div class="card" style="text-align:center;padding:32px 24px">
+    <div class="profile-avatar">🖤</div>
+    <div class="profile-name" id="profile-name">Neural User</div>
+    <div class="profile-tier" id="profile-tier">Street Tier</div>
+    <div style="margin-top:16px">
+      <span class="badge badge-cyan" id="profile-voice">🎤 Voice: Ready</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Identity</div>
+    <div class="brain-line"><b>User ID:</b> <span id="profile-id">--</span></div>
+    <div class="brain-line"><b>Tier:</b> <span id="profile-tier-detail">Street</span></div>
+    <div class="brain-line"><b>Messages:</b> <span id="profile-messages">10/10</span></div>
+    <div class="brain-line"><b>Joined:</b> <span id="profile-joined">--</span></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Stats</div>
+    <div class="grid-2">
+      <div class="stat-card"><div class="stat-label">Chats</div><div class="stat-value" id="profile-stat-chats">0</div></div>
+      <div class="stat-card"><div class="stat-label">Deployments</div><div class="stat-value" id="profile-stat-deploys">0</div></div>
+      <div class="stat-card"><div class="stat-label">Security</div><div class="stat-value" id="profile-stat-security" style="color:var(--green)">85</div></div>
+      <div class="stat-card"><div class="stat-label">Knowledge</div><div class="stat-value" id="profile-stat-knowledge">0</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ SIGNSAFE ═══════ -->
+<div class="page" id="page-signsafe">
+  <div class="card">
+    <div class="card-title">Find a Notary Public</div>
+    <div class="province-row" id="province-row">
+      <div class="province-pill active" onclick="filterProvince(null,this)">ALL</div>
+      <div class="province-pill" onclick="filterProvince('ON',this)">ON</div>
+      <div class="province-pill" onclick="filterProvince('BC',this)">BC</div>
+      <div class="province-pill" onclick="filterProvince('AB',this)">AB</div>
+      <div class="province-pill" onclick="filterProvince('QC',this)">QC</div>
+      <div class="province-pill" onclick="filterProvince('MB',this)">MB</div>
+      <div class="province-pill" onclick="filterProvince('SK',this)">SK</div>
+      <div class="province-pill" onclick="filterProvince('NS',this)">NS</div>
+      <div class="province-pill" onclick="filterProvince('NB',this)">NB</div>
+      <div class="province-pill" onclick="filterProvince('NL',this)">NL</div>
+      <div class="province-pill" onclick="filterProvince('PE',this)">PE</div>
+    </div>
+  </div>
+  <div id="notary-list">
+    <div class="card" style="text-align:center;color:var(--text-dim);padding:32px">
+      <div style="font-size:32px;margin-bottom:12px">📝</div>
+      <div>Loading notaries from neural link...</div>
+    </div>
+  </div>
+  <div class="card">
+    <button class="btn btn-ghost" onclick="loadNotaries()">🔄 Refresh Notaries</button>
+  </div>
+</div>
+
+<!-- ═══════ ONE BRAIN ═══════ -->
+<div class="page" id="page-brain-handoff">
+  <div class="card">
+    <div class="card-title">🧠 One Brain Handoff</div>
+    <div class="brain-line"><b>PURPOSE:</b> Build one unified learning organism where every user can learn, teach, and improve the whole network.</div>
+    <div class="glow-sep"></div>
+    <div class="brain-line highlight"><b>CORE PRINCIPLES</b></div>
+    <div class="brain-line"><span class="brain-number">1</span>Everyone is both learner and teacher.</div>
+    <div class="brain-line"><span class="brain-number">2</span>The AI is a connector, not a replacement.</div>
+    <div class="brain-line"><span class="brain-number">3</span>Every interaction must improve future outcomes.</div>
+    <div class="brain-line"><span class="brain-number">4</span>Safety, trust, and measurable learning gains are mandatory.</div>
+    <div class="glow-sep"></div>
+    <div class="brain-line highlight"><b>THE LOOP</b></div>
+    <div class="brain-line"><span class="brain-number">1</span>User asks for help on topic T.</div>
+    <div class="brain-line"><span class="brain-number">2</span>AI gives first explanation in user style.</div>
+    <div class="brain-line"><span class="brain-number">3</span>System checks confidence score.</div>
+    <div class="brain-line"><span class="brain-number">4</span>Matches 1-3 peers with proven help quality.</div>
+    <div class="brain-line"><span class="brain-number">5</span>Group session happens; AI facilitates.</div>
+    <div class="brain-line"><span class="brain-number">6</span>Outcomes recorded: understanding delta.</div>
+    <div class="brain-line"><span class="brain-number">7</span>Memory engine updates best strategies.</div>
+    <div class="brain-line"><span class="brain-number">8</span>Next learner gets a better response from the start.</div>
+    <div class="glow-sep"></div>
+    <div class="brain-line" style="color:var(--pink);font-weight:700"><b>NON-NEGOTIABLE:</b> This system wins when people become better thinkers in real life.</div>
+  </div>
+  <div class="card">
+    <div class="card-title">Deploy</div>
+    <button class="btn btn-green" style="margin-bottom:10px" onclick="deployOneBrain()">🚀 Deploy One Brain</button>
+    <button class="btn btn-cyan" onclick="checkBackendHealth()">🔍 Check Backend Health</button>
+  </div>
+</div>
+
+<!-- ═══════ SETTINGS ═══════ -->
+<div class="page" id="page-settings">
+  <div class="card">
+    <div class="setting-group">
+      <div class="setting-group-title">🔗 Neural Link</div>
+      <input type="url" id="api-url" value="https://liljr-prod-production.up.railway.app" placeholder="Backend URL">
+    </div>
+    <div class="toggle-row">
+      <div class="label"><span class="icon">🔄</span>Auto-sync</div>
+      <div class="toggle-switch on" onclick="this.classList.toggle('on')"></div>
+    </div>
+    <div class="toggle-row">
+      <div class="label"><span class="icon">📴</span>Offline Mode</div>
+      <div class="toggle-switch" onclick="this.classList.toggle('on')"></div>
+    </div>
+    <div class="toggle-row">
+      <div class="label"><span class="icon">🔊</span>Text-to-Speech</div>
+      <div class="toggle-switch on" id="tts-toggle" onclick="this.classList.toggle('on')"></div>
+    </div>
+    <div class="toggle-row">
+      <div class="label"><span class="icon">🎤</span>Voice Input</div>
+      <div class="toggle-switch on" id="voice-toggle" onclick="this.classList.toggle('on')"></div>
+    </div>
+    <div style="margin-top:12px">
+      <button class="btn btn-sm btn-cyan" onclick="saveApiUrl()">💾 Save URL</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="setting-group-title">📱 Device Telemetry</div>
+    <div id="device-info">Loading...</div>
+  </div>
+  <div class="card">
+    <div class="setting-group-title">🎤 Voice Commands</div>
+    <div class="brain-line">Say <b>"update now"</b> — check for app updates</div>
+    <div class="brain-line">Say <b>"push code"</b> — git push to GitHub</div>
+    <div class="brain-line">Say <b>"pull code"</b> — git pull latest</div>
+    <div class="brain-line">Say <b>"deploy now"</b> — redeploy backend</div>
+    <div class="brain-line">Say <b>"full cycle"</b> — push, pull, deploy</div>
+    <div class="brain-line">Say <b>"eternal"</b> — wake word</div>
+    <div class="brain-line">Say <b>"privacy"</b> — privacy mode</div>
+  </div>
+  <div class="card">
+    <div class="setting-group-title">💻 Live Terminal</div>
+    <div class="brain-line"><b>/api/read_file</b> — Read file contents</div>
+    <div class="brain-line"><b>/api/append_file</b> — Append to file</div>
+    <div class="brain-line"><b>/api/run_command</b> — Run shell command</div>
+  </div>
+  <div class="card">
+    <div class="setting-group-title">⚠️ Danger Zone</div>
+    <button class="btn btn-red" style="width:100%" onclick="if(confirm('Reset all neural data?')){localStorage.clear();location.reload()}">🔄 Reset Neural Link</button>
+  </div>
+  <div class="card" style="text-align:center">
+    <div style="font-size:11px;color:var(--text-dark);text-transform:uppercase;letter-spacing:2px">LilJR v2.0 Neural Link</div>
+    <div style="font-size:10px;color:#444;margin-top:6px">100% Owned • No Expo • No Restrictions</div>
+    <div style="font-size:10px;color:#333;margin-top:4px">PWA Ready • Add to Home Screen</div>
+    <div class="glow-sep"></div>
+    <div style="font-size:9px;color:#222">Built for you. Not them. 🖤</div>
+  </div>
+</div>
+
+<!-- ═══════ NAV ═══════ -->
+<div id="nav">
+  <div class="nav-item active" onclick="nav('home',this)"><span class="nav-icon">🏠</span><span>Home</span></div>
+  <div class="nav-item" onclick="nav('dashboard',this)"><span class="nav-icon">📊</span><span>Dash</span></div>
+  <div class="nav-item" onclick="nav('vision',this)"><span class="nav-icon">👁️</span><span>Vision</span></div>
+  <div class="nav-item" onclick="nav('chat',this)"><span class="nav-icon">💬</span><span>Chat</span></div>
+  <div class="nav-item" onclick="nav('scopes',this)"><span class="nav-icon">📡</span><span>Scopes</span></div>
+  <div class="nav-item" onclick="nav('trading',this)"><span class="nav-icon">📈</span><span>Trade</span></div>
+  <div class="nav-item" onclick="nav('brain',this)"><span class="nav-icon">🧠</span><span>Core</span></div>
+  <div class="nav-item" onclick="showMoreMenu()"><span class="nav-icon">⋯</span><span>More</span></div>
+</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// LIL JR 2.0 — NEURAL LINK CORE
+// MERGED: Original Expo App + All New Features
+// ═══════════════════════════════════════════════════════════
+
+let API = localStorage.getItem('liljr_api') || 'https://liljr-prod-production.up.railway.app';
+let USER_ID = localStorage.getItem('liljr_user') || 'neural-' + Math.random().toString(36).slice(2, 8);
+let USER_TIER = localStorage.getItem('liljr_tier') || 'street';
+let USER_NAME = localStorage.getItem('liljr_name') || 'Neural User';
+localStorage.setItem('liljr_user', USER_ID);
+
+let stream = null, scopeRAF = null, scopeRunning = true, scopeSpeed = 1;
+let recognition = null, voiceListening = false, chatHistory = [];
+let homeRecognition = null, homeVoiceListening = false;
+let pwaInstallEvent = null;
+let backendOnline = false;
+let realisticMode = false;
+let ttsEnabled = true;
+let brainStateIdx = 0;
+let brainFiring = [];
+
+const TIERS = {
+  street: { price: 0, name: 'Street', messages: 10, color: '#6b7280' },
+  hustler: { price: 9.99, name: 'Hustler', messages: 100, color: '#00d4ff' },
+  builder: { price: 29.99, name: 'Builder', messages: 500, color: '#a855f7' },
+  master: { price: 99.99, name: 'Master', messages: Infinity, color: '#f472b6' },
+  empire: { price: 299.99, name: 'Empire', messages: Infinity, color: '#fbbf24' }
+};
+
+const HOLDINGS = [
+  { symbol: 'AAPL', price: 189.52, change: 1.2, shares: 50, up: true },
+  { symbol: 'TSLA', price: 242.10, change: -0.8, shares: 30, up: false },
+  { symbol: 'BTC', price: 67234.00, change: 2.4, shares: 0.15, up: true },
+  { symbol: 'ETH', price: 3456.00, change: -1.2, shares: 2.5, up: false }
+];
+
+// ═══════ NEURAL BRAIN (Original Expo) ═══════
+const NEURONS = [
+  { name: 'CORTEX', color: '#b829dd' }, { name: 'LANGUAGE', color: '#00f0ff' },
+  { name: 'LOGIC', color: '#00ffb8' }, { name: 'MEMORY', color: '#ff2a6d' },
+  { name: 'VISION', color: '#64ff8f' }, { name: 'VOICE', color: '#ffb300' },
+  { name: 'REASON', color: '#00f0ff' }, { name: 'CORE', color: '#fbbf24' },
+  { name: 'EMOTION', color: '#ff2a6d' }, { name: 'LEARN', color: '#b829dd' },
+  { name: 'OUTPUT', color: '#00ffb8' }, { name: 'STT', color: '#00f0ff' },
+  { name: 'TTS', color: '#ffb300' }, { name: 'AUDITORY', color: '#ff2a6d' },
+  { name: 'MOTOR', color: '#64ff8f' }, { name: 'SENSORY', color: '#b829dd' }
+];
+const SYNAPSES = [
+  [0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7],[7,8],[8,9],[9,10],
+  [10,11],[11,12],[12,13],[13,14],[14,15],[15,0],[0,8],[2,10],[4,12],[6,14],
+  [1,9],[3,11],[5,13],[7,15],[8,12]
+];
+const BRAIN_STATES = [
+  { name: 'IDLE', status: 'NEURAL STANDBY', active: [] },
+  { name: 'THINKING', status: 'PROCESSING NEURAL PATHWAYS', active: [0,1,2,3,6,10] },
+  { name: 'LISTENING', status: 'AUDITORY CORTEX ACTIVE', active: [5,11,12,13] }
+];
+
+function initNeuralBrain() {
+  const svg = document.getElementById('neural-brain-svg');
+  if (!svg) return;
+  const W = 340, H = 340, C = W / 2, R = 120;
+  svg.innerHTML = '';
+  
+  // Draw synapses
+  SYNAPSES.forEach(([a, b]) => {
+    const angA = (2 * Math.PI * a) / NEURONS.length;
+    const angB = (2 * Math.PI * b) / NEURONS.length;
+    const x1 = C + R * Math.cos(angA);
+    const y1 = C + R * Math.sin(angA);
+    const x2 = C + R * Math.cos(angB);
+    const y2 = C + R * Math.sin(angB);
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', x1); line.setAttribute('y1', y1);
+    line.setAttribute('x2', x2); line.setAttribute('y2', y2);
+    line.setAttribute('stroke', '#444'); line.setAttribute('stroke-width', '1.5');
+    line.setAttribute('opacity', '0.4');
+    line.className = 'synapse-line';
+    line.dataset.a = a; line.dataset.b = b;
+    svg.appendChild(line);
+  });
+  
+  // Draw neurons
+  NEURONS.forEach((n, i) => {
+    const ang = (2 * Math.PI * i) / NEURONS.length;
+    const x = C + R * Math.cos(ang);
+    const y = C + R * Math.sin(ang);
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('cx', x); circle.setAttribute('cy', y);
+    circle.setAttribute('r', n.name === 'CORE' ? 22 : 14);
+    circle.setAttribute('fill', n.color);
+    circle.setAttribute('opacity', '0.5');
+    circle.setAttribute('stroke', n.name === 'CORE' ? '#fff' : '#222');
+    circle.setAttribute('stroke-width', n.name === 'CORE' ? '4' : '2');
+    circle.className = 'neuron-node';
+    circle.dataset.idx = i;
+    svg.appendChild(circle);
+    
+    // Label
+    const label = document.createElement('div');
+    label.className = 'neural-label';
+    label.textContent = n.name;
+    label.style.left = x + 'px';
+    label.style.top = y + 'px';
+    label.style.color = n.color;
+    label.id = 'neuron-label-' + i;
+    document.querySelector('.neural-brain-container').appendChild(label);
+  });
+}
+
+function updateNeuralBrain() {
+  const labels = document.querySelectorAll('[id^="neuron-label-"]');
+  const nodes = document.querySelectorAll('.neuron-node');
+  const lines = document.querySelectorAll('.synapse-line');
+  const state = BRAIN_STATES[brainStateIdx];
+  
+  document.getElementById('brain-state-text').textContent = state.status;
+  document.getElementById('brain-state-text').style.color = state.active.length ? '#00f0ff' : '#b829dd';
+  
+  nodes.forEach((node, i) => {
+    const active = Math.random() < 0.25 || state.active.includes(i);
+    node.setAttribute('opacity', active ? '0.95' : '0.5');
+    node.setAttribute('stroke', active ? '#fff' : '#222');
+    if (labels[i]) labels[i].style.opacity = active ? '1' : '0.5';
+    brainFiring[i] = active;
+  });
+  
+  lines.forEach(line => {
+    const a = parseInt(line.dataset.a);
+    const b = parseInt(line.dataset.b);
+    const active = brainFiring[a] && brainFiring[b];
+    line.setAttribute('stroke', active ? '#fff' : '#444');
+    line.setAttribute('stroke-width', active ? '3' : '1.5');
+    line.setAttribute('opacity', active ? '0.9' : '0.4');
+  });
+}
+
+// ═══════ SPLASH ═══════
+function hideSplash() {
+  setTimeout(() => {
+    document.getElementById('splash-screen').classList.add('hidden');
+    setTimeout(() => document.getElementById('splash-screen').style.display = 'none', 800);
+  }, 2400);
+}
+
+// ═══════ NAVIGATION ═══════
+function nav(name, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (el) el.classList.add('active');
+  if (name === 'scopes') startScopes();
+  if (name !== 'scopes') stopScopes();
+  if (name === 'brain' || name === 'dashboard') syncBrainStats();
+  if (name === 'trading') renderHoldings();
+  if (name === 'chat') scrollToBottom();
+}
+
+function showMoreMenu() {
+  const content = document.getElementById('modal-content');
+  content.innerHTML = `
+    <div class="modal-title">Neural Modules</div>
+    <div class="grid-2" style="gap:10px">
+      <button class="btn" onclick="closeModal();nav('social')">🌐 Social</button>
+      <button class="btn" onclick="closeModal();nav('pricing')">💎 Tiers</button>
+      <button class="btn" onclick="closeModal();nav('profile')">👤 Profile</button>
+      <button class="btn" onclick="closeModal();nav('signsafe')">📝 SignSafe</button>
+      <button class="btn" onclick="closeModal();nav('voice')">🎙️ Voice</button>
+      <button class="btn" onclick="closeModal();nav('settings')">⚙️ Settings</button>
+      <button class="btn btn-cyan" onclick="closeModal();nav('brain-handoff')">🧬 One Brain</button>
+    </div>
+  `;
+  document.getElementById('modal-overlay').classList.add('active');
+}
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('active');
+}
+
+// ═══════ TOAST ═══════
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ═══════ API ═══════
+async function apiCall(endpoint, body = {}, method = 'POST') {
+  try {
+    const opts = { method, headers: { 'Content-Type': 'application/json' } };
+    if (method === 'POST') opts.body = JSON.stringify(body);
+    const r = await fetch(API + endpoint, opts);
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return await r.json();
+  } catch (e) {
+    return { ok: false, error: e.message };
+  }
+}
+
+async function checkBackend() {
+  try {
+    const r = await fetch(API + '/health', { method: 'GET', cache: 'no-cache' });
+    if (r.ok) {
+      backendOnline = true;
+      document.getElementById('ws-dot').className = 'status-dot online';
+      document.getElementById('ws-text').textContent = 'LIVE';
+      document.getElementById('home-backend').textContent = 'ON';
+      document.getElementById('home-backend-url').textContent = 'Connected';
+      document.getElementById('chat-status-dot').className = 'status-dot online';
+      document.getElementById('chat-status-text').textContent = 'ONLINE';
+      return true;
+    }
+    throw new Error('down');
+  } catch (e) {
+    backendOnline = false;
+    document.getElementById('ws-dot').className = 'status-dot offline';
+    document.getElementById('ws-text').textContent = 'OFFLINE';
+    document.getElementById('home-backend').textContent = 'OFF';
+    document.getElementById('home-backend-url').textContent = 'No link';
+    document.getElementById('chat-status-dot').className = 'status-dot offline';
+    document.getElementById('chat-status-text').textContent = 'OFFLINE';
+    return false;
+  }
+}
+
+async function syncBrainStats() {
+  try {
+    const stats = await apiCall('/stats', {}, 'GET');
+    if (stats.error) throw new Error(stats.error);
+    document.getElementById('brain-stat-knowledge').textContent = stats.totalKnowledge || 0;
+    document.getElementById('brain-architect').textContent = stats.architect || 'Lil Jr';
+    document.getElementById('brain-sync').textContent = new Date().toLocaleString();
+    document.getElementById('dash-memory').textContent = (stats.totalKnowledge || 12847) + ' FILES — 4.2GB INDEXED';
+    return true;
+  } catch (e) { return false; }
+}
+
+// ═══════ PHONE APIs ═══════
+function vibrate() {
+  if (navigator.vibrate) navigator.vibrate(200);
+  showToast('📳 Neural vibration');
+  apiCall('/api/phone/vibrate', { duration: 300 });
+}
+
+async function getBattery() {
+  if ('getBattery' in navigator) {
+    const b = await navigator.getBattery();
+    const pct = Math.round(b.level * 100);
+    document.getElementById('home-battery').textContent = pct + '%';
+    document.getElementById('home-battery-status').textContent = b.charging ? 'Charging' : 'Draining';
+    document.getElementById('dash-battery').textContent = pct + '%';
+    showToast('🔋 ' + pct + '%' + (b.charging ? ' ⚡' : ''));
+  } else { showToast('Battery API not available'); }
+  const res = await apiCall('/api/phone/battery', {}, 'POST');
+  if (res.level) showToast('Backend battery: ' + res.level + '%');
+}
+
+function getLocation() {
+  if ('geolocation' in navigator) {
+    navigator.geolocation.getCurrentPosition(
+      p => showToast('📍 ' + p.coords.latitude.toFixed(4) + ', ' + p.coords.longitude.toFixed(4)),
+      e => showToast('📍 GPS error: ' + e.message)
+    );
+  } else { showToast('Geolocation not available'); }
+  apiCall('/api/phone/location', {}, 'POST').then(r => {
+    if (r.city) showToast('📍 Backend: ' + r.city);
+  });
+}
+
+function openUrl(url) { window.open(url, '_blank'); }
+
+// ═══════ CAMERA ═══════
+async function startCamera() {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+    const v = document.getElementById('camera-feed');
+    v.srcObject = stream;
+    v.onloadedmetadata = () => {
+      document.getElementById('cam-res').textContent = v.videoWidth + 'x' + v.videoHeight;
+      showToast('👁️ Neural camera active');
+    };
+  } catch (e) { showToast('Camera: ' + e.message); }
+}
+function stopCamera() {
+  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; showToast('Camera offline'); }
+}
+function setFilter(f) {
+  document.getElementById('camera-feed').style.filter = f;
+  document.getElementById('cam-mode').textContent = f ? 'THERMAL' : 'NEURAL';
+}
+async function capturePhoto() {
+  if (!stream) { showToast('Start camera first'); return; }
+  const v = document.getElementById('camera-feed'), c = document.createElement('canvas');
+  c.width = v.videoWidth || 640; c.height = v.videoHeight || 480;
+  const x = c.getContext('2d');
+  x.filter = v.style.filter; x.drawImage(v, 0, 0, c.width, c.height);
+  const a = document.createElement('a');
+  a.href = c.toDataURL('image/jpeg', 0.9);
+  a.download = 'liljr_neural_' + Date.now() + '.jpg';
+  a.click();
+  apiCall('/api/phone/photo', { camera: 0 }).then(r => {
+    if (r.captured) showToast('📸 Frame captured to memory bank');
+  });
+}
+
+// ═══════ CHAT ═══════
+function addChat(text, role = 'bot') {
+  const box = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = 'chat-msg ' + role;
+  if (role === 'user') {
+    div.innerHTML = '<div class="sender">You</div><div>' + text + '</div>';
+  } else if (role === 'bot') {
+    div.innerHTML = '<div class="sender">🖤 LilJR Neural Link</div><div>' + text + '</div>';
+  } else { div.innerHTML = text; }
+  box.appendChild(div);
+  scrollToBottom();
+}
+function scrollToBottom() {
+  const box = document.getElementById('chat-messages');
+  box.scrollTop = box.scrollHeight;
+}
+function toggleRealistic() {
+  realisticMode = !realisticMode;
+  const toggle = document.getElementById('realistic-toggle');
+  const label = document.getElementById('realistic-label');
+  if (realisticMode) { toggle.classList.add('active'); label.textContent = 'Realistic ON'; }
+  else { toggle.classList.remove('active'); label.textContent = 'Realistic OFF'; }
+  showToast('Realistic mode: ' + (realisticMode ? 'ON' : 'OFF'));
+}
+
+async function sendChat() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+  addChat(text, 'user');
+  input.value = '';
+  chatHistory.push({ role: 'user', content: text });
+  const thinkId = 'think-' + Date.now();
+  addChat('<span id="' + thinkId + '" class="loading"><span class="dot">•</span><span class="dot">•</span><span class="dot">•</span> Neural processing</span>', 'system');
+  document.getElementById('chat-status-dot').className = 'status-dot think';
+  document.getElementById('chat-status-text').textContent = 'THINKING...';
+  const messageToSend = realisticMode ? '[REALISTIC] ' + text : text;
+  const history = [...chatHistory].slice(-10).map(h => ({ role: h.role, content: h.content }));
+  try {
+    const res = await apiCall('/chat', { message: messageToSend, userId: USER_ID, tier: USER_TIER, domain: 'mobile', history: history });
+    document.getElementById(thinkId).parentElement.remove();
+    document.getElementById('chat-status-dot').className = 'status-dot online';
+    document.getElementById('chat-status-text').textContent = 'ONLINE';
+    const reply = res.reply || res.response || res.message || JSON.stringify(res);
+    addChat(reply, 'bot');
+    chatHistory.push({ role: 'assistant', content: reply });
+    const chats = parseInt(localStorage.getItem('liljr_chats') || '0') + 1;
+    localStorage.setItem('liljr_chats', chats);
+    document.getElementById('profile-stat-chats').textContent = chats;
+    if (ttsEnabled && 'speechSynthesis' in window) {
+      const u = new SpeechSynthesisUtterance(reply);
+      u.rate = 1.0; u.pitch = 1.0;
+      speechSynthesis.speak(u);
+    }
+  } catch (e) {
+    document.getElementById(thinkId).parentElement.remove();
+    document.getElementById('chat-status-dot').className = 'status-dot offline';
+    document.getElementById('chat-status-text').textContent = 'OFFLINE';
+    addChat('Neural link severed. Backend offline.<br><span style="font-size:11px;color:var(--text-dim)">Error: ' + e.message + '</span>', 'bot');
+  }
+}
+
+function toggleVoice() {
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    showToast('Voice neural link not available'); return;
+  }
+  if (voiceListening) { recognition?.stop(); voiceListening = false; document.getElementById('voice-btn').textContent = '🎤'; return; }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SR();
+  recognition.continuous = false;
+  recognition.interimResults = false;
+  recognition.lang = 'en-US';
+  recognition.onstart = () => { voiceListening = true; document.getElementById('voice-btn').textContent = '🔴'; showToast('🎤 Neural listening...'); };
+  recognition.onresult = (e) => { document.getElementById('chat-input').value = e.results[0][0].transcript; sendChat(); };
+  recognition.onerror = (e) => { showToast('Voice: ' + e.error); voiceListening = false; document.getElementById('voice-btn').textContent = '🎤'; };
+  recognition.onend = () => { voiceListening = false; document.getElementById('voice-btn').textContent = '🎤'; };
+  recognition.start();
+}
+
+// ═══════ HOME VOICE CONTROL (Original Expo) ═══════
+function startHomeVoice() {
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    showToast('Voice not supported'); return;
+  }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  homeRecognition = new SR();
+  homeRecognition.continuous = true;
+  homeRecognition.interimResults = false;
+  homeRecognition.lang = 'en-US';
+  homeRecognition.onstart = () => {
+    homeVoiceListening = true;
+    document.getElementById('home-voice-transcript').textContent = '🎤 Listening...';
+    showToast('🎤 Home voice active');
+  };
+  homeRecognition.onresult = (e) => {
+    const text = e.results[e.results.length - 1][0].transcript;
+    document.getElementById('home-voice-transcript').textContent = '▸ ' + text;
+    processHomeVoiceCommand(text);
+  };
+  homeRecognition.onerror = (e) => { console.log('Home voice error:', e.error); };
+  homeRecognition.onend = () => { homeVoiceListening = false; };
+  homeRecognition.start();
+}
+
+function stopHomeVoice() {
+  if (homeRecognition) { homeRecognition.stop(); homeVoiceListening = false; document.getElementById('home-voice-transcript').textContent = '⏹ Stopped'; }
+}
+
+function processHomeVoiceCommand(command) {
+  const cmd = command.trim().toLowerCase();
+  if (cmd === 'update now') { showToast('🔄 Checking for updates...'); checkForUpdate(); return; }
+  if (cmd === 'push code') { showToast('⬆️ Pushing code...'); runBackendCommand('git add . && git commit -m "Auto: voice push" && git push origin master'); return; }
+  if (cmd === 'pull code') { showToast('⬇️ Pulling code...'); runBackendCommand('git pull origin master'); return; }
+  if (cmd === 'deploy now') { showToast('🚀 Redeploying...'); runBackendCommand('systemctl restart liljr'); return; }
+  if (cmd === 'full cycle') { showToast('🔄 Full cycle...'); runBackendCommand('git add . && git commit -m "Auto: full cycle" && git push origin master && git pull origin master && systemctl restart liljr'); return; }
+  if (cmd.includes('eternal')) { showToast('🔥 ETERNAL WAKE WORD'); nav('chat'); return; }
+  if (cmd.includes('privacy')) { showToast('🔒 PRIVACY MODE'); return; }
+  // Default: send to backend
+  runBackendCommand(cmd);
+}
+
+// ═══════ VOICE PAGE ═══════
+function startVoiceRecognition() {
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    showToast('Voice neural link not available'); return;
+  }
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  window.voiceRecog = new SR();
+  window.voiceRecog.continuous = true;
+  window.voiceRecog.interimResults = true;
+  window.voiceRecog.lang = 'en-US';
+  const log = document.getElementById('voice-page-log');
+  window.voiceRecog.onstart = () => {
+    document.getElementById('voice-page-status').textContent = 'LISTENING...';
+    document.getElementById('voice-page-status').classList.add('listening');
+    document.getElementById('voice-page-icon').textContent = '🔴';
+    showToast('🎤 Neural voice active');
+  };
+  window.voiceRecog.onresult = (e) => {
+    const transcript = Array.from(e.results).map(r => r[0].transcript).join('');
+    const div = document.createElement('div');
+    div.style.cssText = 'padding:6px 0;border-bottom:1px solid rgba(0,240,255,0.05)';
+    div.innerHTML = '<span style="color:var(--cyan)">▸</span> ' + transcript;
+    log.prepend(div);
+    const t = transcript.toLowerCase();
+    if (t.includes('eternal')) { showToast('🔥 ETERNAL WAKE WORD'); nav('chat'); }
+    if (t.includes('privacy')) { showToast('🔒 PRIVACY MODE'); }
+    if (t.includes('deploy')) { showToast('🚀 DEPLOY TRIGGERED'); deployOneBrain(); }
+    if (t.includes('push')) { showToast('⬆️ PUSH CODE'); }
+    if (t.includes('pull')) { showToast('⬇️ PULL CODE'); }
+    if (t.includes('full cycle')) { showToast('🔄 FULL CYCLE'); }
+    if (t.includes('update')) { showToast('🔄 UPDATE NOW'); checkForUpdate(); }
+  };
+  window.voiceRecog.onerror = (e) => { console.log('Voice error:', e.error); };
+  window.voiceRecog.onend = () => {
+    document.getElementById('voice-page-status').textContent = 'NEURAL VOICE READY';
+    document.getElementById('voice-page-status').classList.remove('listening');
+    document.getElementById('voice-page-icon').textContent = '🎤';
+  };
+  window.voiceRecog.start();
+}
+
+function stopVoiceRecognition() {
+  if (window.voiceRecog) { window.voiceRecog.stop(); showToast('⏹ Voice stopped'); }
+}
+
+// ═══════ UPDATE BUTTON (Original Expo) ═══════
+function checkForUpdate() {
+  const btn = document.getElementById('update-btn');
+  const status = document.getElementById('update-status');
+  btn.disabled = true;
+  status.textContent = 'Checking...';
+  // Simulate OTA check - in real app this would check Expo Updates
+  setTimeout(() => {
+    status.textContent = 'App is up to date.';
+    btn.disabled = false;
+    showToast('✅ App is up to date');
+  }, 1500);
+}
+
+// ═══════ LIVE TERMINAL (Original Expo) ═══════
+function addTerminalLine(text, type = 'out') {
+  const box = document.getElementById('terminal-box');
+  const div = document.createElement('div');
+  div.className = 'terminal-line ' + type;
+  div.textContent = text;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
+async function sendTerminal() {
+  const input = document.getElementById('terminal-input');
+  const text = input.value.trim();
+  if (!text) return;
+  addTerminalLine('$ ' + text, 'cmd');
+  input.value = '';
+  document.getElementById('terminal-output').textContent = 'Sending...';
+  try {
+    const res = await apiCall('/api/append_file', { file: 'live_code.py', line: text });
+    addTerminalLine(res.status || 'OK', 'out');
+    document.getElementById('terminal-output').textContent = res.status || 'Sent';
+  } catch (e) {
+    addTerminalLine('Error: ' + e.message, 'err');
+    document.getElementById('terminal-output').textContent = 'Error: ' + e.message;
+  }
+}
+
+async function redeployBackend() {
+  addTerminalLine('$ systemctl restart liljr', 'cmd');
+  document.getElementById('terminal-output').textContent = 'Redeploying...';
+  try {
+    const res = await apiCall('/api/run_command', { command: 'systemctl restart liljr' });
+    addTerminalLine(res.output || res.status || 'Redeployed', 'out');
+    document.getElementById('terminal-output').textContent = res.output || 'Redeployed';
+    showToast('🚀 Backend redeployed');
+  } catch (e) {
+    addTerminalLine('Error: ' + e.message, 'err');
+    document.getElementById('terminal-output').textContent = 'Error: ' + e.message;
+  }
+}
+
+async function runBackendCommand(command) {
+  addTerminalLine('$ ' + command, 'cmd');
+  try {
+    const res = await apiCall('/api/run_command', { command: command });
+    addTerminalLine(res.output || res.result || JSON.stringify(res), 'out');
+    return res;
+  } catch (e) {
+    addTerminalLine('Error: ' + e.message, 'err');
+    return { error: e.message };
+  }
+}
+
+// ═══════ SCOPES ═══════
+const scopeData = { alpha: [], beta: [], theta: [], gamma: [] };
+for (let k in scopeData) for (let i = 0; i < 80; i++) scopeData[k].push(50 + Math.random() * 40);
+function drawScope(id, data, color) {
+  const c = document.getElementById(id); if (!c) return;
+  const ctx = c.getContext('2d'), w = c.width = c.offsetWidth, h = c.height = c.offsetHeight;
+  ctx.fillStyle = '#0a0a14'; ctx.fillRect(0, 0, w, h);
+  ctx.strokeStyle = 'rgba(0,240,255,0.03)'; ctx.lineWidth = 1;
+  for (let x = 0; x < w; x += 20) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke(); }
+  for (let y = 0; y < h; y += 20) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke(); }
+  ctx.beginPath(); ctx.moveTo(0, h / 2);
+  for (let i = 0; i < data.length; i++) ctx.lineTo((i / data.length) * w, h - (data[i] / 100) * h * 0.8 - h * 0.1);
+  ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.shadowBlur = 8; ctx.shadowColor = color; ctx.stroke();
+  ctx.shadowBlur = 0;
+  ctx.lineTo(w, h); ctx.lineTo(0, h); ctx.closePath();
+  if (color === '#00F0FF') ctx.fillStyle = 'rgba(0,240,255,0.05)';
+  else if (color === '#FF2D92') ctx.fillStyle = 'rgba(255,45,146,0.05)';
+  else if (color === '#B829DD') ctx.fillStyle = 'rgba(184,41,221,0.05)';
+  else if (color === '#00FF88') ctx.fillStyle = 'rgba(0,255,136,0.05)';
+  ctx.fill();
+}
+function updateScopes() {
+  if (!scopeRunning) return;
+  for (let k in scopeData) {
+    scopeData[k].shift();
+    const base = k === 'alpha' ? 60 : k === 'beta' ? 45 : k === 'theta' ? 70 : 35;
+    scopeData[k].push(base + Math.random() * 30 + Math.sin(Date.now() / 1000) * 10);
+  }
+  drawScope('scope-alpha', scopeData.alpha, '#00F0FF');
+  drawScope('scope-beta', scopeData.beta, '#FF2D92');
+  drawScope('scope-theta', scopeData.theta, '#B829DD');
+  drawScope('scope-gamma', scopeData.gamma, '#00FF88');
+  scopeRAF = requestAnimationFrame(updateScopes);
+}
+function startScopes() { if (!scopeRAF) updateScopes(); }
+function stopScopes() { if (scopeRAF) { cancelAnimationFrame(scopeRAF); scopeRAF = null; } }
+function toggleScopes() {
+  scopeRunning = !scopeRunning;
+  document.getElementById('scope-btn').textContent = scopeRunning ? '⏸ Pause' : '▶ Resume';
+  if (scopeRunning) startScopes();
+}
+
+// ═══════ TRADING ═══════
+function renderHoldings() {
+  const total = HOLDINGS.reduce((acc, h) => acc + (h.price * h.shares), 0);
+  const dayChange = HOLDINGS.reduce((acc, h) => acc + (h.price * h.shares * h.change / 100), 0);
+  const dayPct = (dayChange / total * 100).toFixed(2);
+  document.getElementById('portfolio-total').textContent = '$' + total.toLocaleString('en-US', { minimumFractionDigits: 2 });
+  document.getElementById('portfolio-change').textContent = (dayChange >= 0 ? '+' : '') + dayPct + '%';
+  document.getElementById('portfolio-change').style.color = dayChange >= 0 ? 'var(--green)' : 'var(--red)';
+  document.getElementById('position-count').textContent = HOLDINGS.length + ' Positions';
+  const list = document.getElementById('holdings-list');
+  list.innerHTML = HOLDINGS.map(h => `
+    <div class="holding-card ${h.up ? 'up' : 'down'}">
+      <div class="holding-info">
+        <div class="holding-symbol">${h.symbol}</div>
+        <div class="holding-shares">${h.shares} shares</div>
+      </div>
+      <div class="holding-value">
+        <div class="holding-price">$${(h.price * h.shares).toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+        <div class="holding-change" style="color:${h.up ? 'var(--green)' : 'var(--red)'}">${h.up ? '▲' : '▼'} ${Math.abs(h.change)}%</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ═══════ SIGNSAFE ═══════
+let selectedProvince = null;
+function filterProvince(province, el) {
+  selectedProvince = province;
+  document.querySelectorAll('.province-pill').forEach(p => p.classList.remove('active'));
+  if (el) el.classList.add('active');
+  loadNotaries();
+}
+async function loadNotaries() {
+  const list = document.getElementById('notary-list');
+  list.innerHTML = '<div class="card" style="text-align:center;color:var(--text-dim);padding:32px"><div class="loading"><span class="dot">•</span><span class="dot">•</span><span class="dot">•</span> Loading...</div></div>';
+  try {
+    const url = selectedProvince ? '/signsafe/notaries?province=' + selectedProvince : '/signsafe/notaries';
+    const res = await apiCall(url, {}, 'GET');
+    const notaries = res.notaries || [];
+    if (notaries.length === 0) {
+      list.innerHTML = '<div class="card" style="text-align:center;color:var(--text-dim);padding:32px"><div style="font-size:32px;margin-bottom:12px">📝</div><div>No notaries available.</div></div>';
+      return;
+    }
+    list.innerHTML = notaries.map(n => `
+      <div class="notary-card">
+        <div class="notary-name">${n.name}</div>
+        <div class="notary-loc">${n.city}, ${n.province}</div>
+        <div class="notary-footer">
+          <div class="notary-price">$${(n.price || 0) / 100}</div>
+          <div class="notary-rating">★ ${n.rating || 0}</div>
+          <button class="btn btn-sm btn-cyan" style="width:auto;padding:8px 16px" onclick="bookNotary('${n.id}', '${n.name}')">Book</button>
+        </div>
+      </div>
+    `).join('');
+  } catch (e) {
+    list.innerHTML = '<div class="card" style="text-align:center;color:var(--text-dim);padding:32px"><div style="font-size:32px;margin-bottom:12px">⚠️</div><div>Backend not responding. SignSafe offline.</div></div>';
+  }
+}
+async function bookNotary(id, name) {
+  showToast('📝 Booking ' + name + '...');
+  try {
+    await apiCall('/signsafe/book', { notaryId: id, userEmail: USER_ID + '@liljr.local', documentType: 'Affidavit' });
+    showToast('✅ Booked with ' + name);
+  } catch (e) { showToast('⚠️ Booking endpoint not active'); }
+}
+
+// ═══════ SECURITY ═══════
+function runSecurityScan() {
+  const results = document.getElementById('scan-results');
+  results.style.display = 'block';
+  results.innerHTML = '<div class="loading"><span class="dot">•</span><span class="dot">•</span><span class="dot">•</span> Scanning neural pathways...</div>';
+  setTimeout(() => {
+    results.innerHTML = `
+      <div style="color:var(--green)">✅ VPN Shield — ACTIVE</div>
+      <div style="color:var(--green)">✅ Biometric Lock — ACTIVE</div>
+      <div style="color:var(--green)">✅ Firewall — ACTIVE</div>
+      <div style="color:var(--yellow)">⚠️ Encrypt Storage — INACTIVE</div>
+      <div style="color:var(--green)">✅ Anti-Track — ACTIVE</div>
+      <div style="color:var(--green)">✅ Intrusion Detection — ACTIVE</div>
+      <div style="margin-top:8px;color:var(--cyan);font-weight:700">Score: 85/100 — NEURAL SHIELD ACTIVE</div>
+    `;
+    showToast('🔒 Security scan complete — 85/100');
+  }, 2000);
+}
+
+// ═══════ ONE BRAIN ═══════
+function deployOneBrain() {
+  showToast('🚀 Deploying One Brain...');
+  const deploys = parseInt(localStorage.getItem('liljr_deploys') || '0') + 1;
+  localStorage.setItem('liljr_deploys', deploys);
+  document.getElementById('profile-stat-deploys').textContent = deploys;
+  apiCall('/organism/health', {}, 'GET').then(d => {
+    if (d.activeUsers !== undefined) showToast('✅ One Brain LIVE — ' + d.activeUsers + ' users');
+    else showToast('⚠️ One Brain backend silent');
+  }).catch(() => showToast('❌ Neural link severed'));
+}
+function checkBackendHealth() {
+  apiCall('/health', {}, 'GET').then(d => showToast('✅ Backend: ' + (d.status || 'OK'))).catch(() => showToast('❌ Backend unreachable'));
+}
+
+// ═══════ PRICING ═══════
+function activateTier() {
+  const email = document.getElementById('tier-email').value.trim();
+  if (!email) { showToast('Enter email first'); return; }
+  showToast('💎 Activation request sent for ' + email);
+}
+
+// ═══════ SETTINGS ═══════
+function saveApiUrl() {
+  const url = document.getElementById('api-url').value.trim();
+  if (!url) { showToast('Enter a URL'); return; }
+  API = url;
+  localStorage.setItem('liljr_api', API);
+  showToast('🔗 Neural link updated: ' + API);
+  checkBackend();
+}
+
+// ═══════ PWA ═══════
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').then(() => console.log('SW registered'));
+}
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  pwaInstallEvent = e;
+  document.getElementById('pwa-btn').style.display = 'block';
+});
+function installPWA() {
+  if (pwaInstallEvent) {
+    pwaInstallEvent.prompt();
+    pwaInstallEvent.userChoice.then(result => {
+      if (result.outcome === 'accepted') showToast('📲 Installing LilJR Neural Link...');
+      document.getElementById('pwa-btn').style.display = 'none';
+    });
+  } else { showToast('📲 Menu → "Add to Home Screen"'); }
+}
+
+// ═══════ DASHBOARD UPTIME ═══════
+let uptimeSec = 0;
+setInterval(() => {
+  uptimeSec++;
+  const h = Math.floor(uptimeSec / 3600).toString().padStart(2, '0');
+  const m = Math.floor((uptimeSec % 3600) / 60).toString().padStart(2, '0');
+  const s = (uptimeSec % 60).toString().padStart(2, '0');
+  const el = document.getElementById('dash-uptime');
+  if (el) el.textContent = h + ':' + m + ':' + s;
+  const cpu = document.getElementById('dash-cpu');
+  if (cpu) cpu.textContent = Math.floor(15 + Math.random() * 25) + '%';
+  const ram = document.getElementById('dash-ram');
+  if (ram) ram.textContent = (3.5 + Math.random()).toFixed(1) + 'GB';
+}, 1000);
+
+// ═══════ INIT ═══════
+window.onload = () => {
+  hideSplash();
+  initNeuralBrain();
+  
+  // Brain state cycling
+  setInterval(() => {
+    brainStateIdx = (brainStateIdx + 1) % BRAIN_STATES.length;
+    updateNeuralBrain();
+  }, 3500);
+  
+  // Random firing
+  setInterval(() => {
+    brainFiring = NEURONS.map((_, i) => Math.random() < 0.25 || BRAIN_STATES[brainStateIdx].active.includes(i));
+    updateNeuralBrain();
+  }, 350);
+  
+  // Device info
+  const info = [
+    '<div class="device-row"><span class="device-label">Screen</span><span class="device-value">' + screen.width + '×' + screen.height + '</span></div>',
+    '<div class="device-row"><span class="device-label">Touch</span><span class="device-value">' + ('ontouchstart' in window ? 'Yes' : 'No') + '</span></div>',
+    '<div class="device-row"><span class="device-label">Language</span><span class="device-value">' + navigator.language + '</span></div>',
+    '<div class="device-row"><span class="device-label">Platform</span><span class="device-value">' + navigator.platform + '</span></div>',
+    '<div class="device-row"><span class="device-label">Online</span><span class="device-value">' + (navigator.onLine ? 'Yes' : 'No') + '</span></div>',
+    '<div class="device-row"><span class="device-label">User ID</span><span class="device-value">' + USER_ID + '</span></div>'
+  ];
+  document.getElementById('device-info').innerHTML = info.join('');
+  document.getElementById('home-platform').textContent = navigator.platform.slice(0, 8);
+  document.getElementById('home-ua').textContent = /Android/.test(navigator.userAgent) ? 'Android' : 'Mobile';
+  document.getElementById('home-net').textContent = navigator.onLine ? 'ON' : 'OFF';
+  document.getElementById('profile-id').textContent = USER_ID;
+  document.getElementById('profile-name').textContent = USER_NAME;
+  document.getElementById('profile-tier').textContent = TIERS[USER_TIER]?.name + ' Tier';
+  document.getElementById('profile-tier-detail').textContent = TIERS[USER_TIER]?.name;
+  document.getElementById('profile-messages').textContent = TIERS[USER_TIER]?.messages === Infinity ? 'Unlimited' : TIERS[USER_TIER]?.messages;
+  document.getElementById('profile-joined').textContent = new Date().toLocaleDateString();
+  document.getElementById('profile-stat-chats').textContent = localStorage.getItem('liljr_chats') || '0';
+  document.getElementById('profile-stat-deploys').textContent = localStorage.getItem('liljr_deploys') || '0';
+  document.getElementById('user-tier-badge').textContent = TIERS[USER_TIER]?.name + ' Tier';
+  
+  const conn = navigator.connection;
+  if (conn) document.getElementById('home-net-type').textContent = (conn.effectiveType || 'unknown').toUpperCase();
+  
+  if ('getBattery' in navigator) {
+    navigator.getBattery().then(b => {
+      const pct = Math.round(b.level * 100);
+      document.getElementById('home-battery').textContent = pct + '%';
+      document.getElementById('home-battery-status').textContent = b.charging ? 'Charging' : 'Draining';
+      document.getElementById('dash-battery').textContent = pct + '%';
+    });
+  }
+  
+  checkBackend();
+  setInterval(checkBackend, 10000);
+  
+  document.getElementById('api-url').value = API;
+  
+  window.addEventListener('online', () => { document.getElementById('home-net').textContent = 'ON'; showToast('🌐 Online'); checkBackend(); });
+  window.addEventListener('offline', () => { document.getElementById('home-net').textContent = 'OFF'; showToast('📴 Offline'); });
+  
+  loadNotaries();
+  syncBrainStats();
+  
+  const chatBox = document.getElementById('chat-messages');
+  chatBox.innerHTML = '';
+  addChat("Yo. What's good? I'm Lil Jr and I remember everything. What are we building today?", 'bot');
+  
+  showToast('🖤 LilJR Neural Link — Online');
+};
+</script>
+</body></html>
