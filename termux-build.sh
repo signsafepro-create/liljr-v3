@@ -1,5 +1,5 @@
 #!/bin/bash
-# LilJR Builder — Works with ANY Java available in Termux
+# LilJR Builder — Fixed Java detection for Termux
 # Run: bash <(curl -s https://raw.githubusercontent.com/signsafepro-create/liljr-v3/master/termux-build.sh)
 
 set -e
@@ -9,10 +9,11 @@ echo "🧠 LILJR TERMUX BUILDER"
 echo "======================"
 
 # Step 1: Find or install Java
-echo "☕ Finding Java..."
-if command -v javac >/dev/null 2>&1; then
+echo "☕ Checking Java..."
+if command -v javac > /dev/null 2>&1; then
     echo "✓ Java found: $(javac -version 2>&1)"
 elif [ -d "$PREFIX/lib/jvm" ]; then
+    # Find any Java installation
     for jvm in "$PREFIX/lib/jvm"/*; do
         if [ -f "$jvm/bin/javac" ]; then
             export JAVA_HOME="$jvm"
@@ -22,22 +23,37 @@ elif [ -d "$PREFIX/lib/jvm" ]; then
         fi
     done
 else
-    echo "Installing Java..."
+    echo "Installing Java 21..."
     pkg update -y
-    # Try multiple package names
-    pkg install -y openjdk-21 2>/dev/null || \
-    pkg install -y openjdk-17 2>/dev/null || \
-    pkg install -y openjdk-11 2>/dev/null || \
-    pkg install -y default-jdk 2>/dev/null || \
-    (echo "❌ Cannot install Java automatically. Try:"; echo "   pkg search openjdk"; echo "   pkg install <whatever-is-available>"; exit 1)
+    pkg install -y openjdk-21
 fi
 
-# Verify Java
-if ! command -v javac >/dev/null 2>&1; then
-    echo "❌ Java installation failed. Check: pkg list-all | grep openjdk"
+# CRITICAL: Set JAVA_HOME properly for Gradle
+if [ -z "$JAVA_HOME" ]; then
+    if [ -d "$PREFIX/lib/jvm/java-21-openjdk" ]; then
+        export JAVA_HOME="$PREFIX/lib/jvm/java-21-openjdk"
+    elif [ -d "$PREFIX/lib/jvm/java-25-openjdk" ]; then
+        export JAVA_HOME="$PREFIX/lib/jvm/java-25-openjdk"
+    else
+        # Auto-detect
+        for d in "$PREFIX/lib/jvm"/*openjdk*; do
+            if [ -d "$d" ]; then
+                export JAVA_HOME="$d"
+                break
+            fi
+        done
+    fi
+fi
+
+export PATH="$JAVA_HOME/bin:$PATH"
+
+# Verify
+if [ ! -f "$JAVA_HOME/bin/javac" ]; then
+    echo "❌ Java not found. Check: ls $PREFIX/lib/jvm/"
     exit 1
 fi
 
+echo "✓ JAVA_HOME: $JAVA_HOME"
 echo "✓ Java: $(javac -version 2>&1)"
 
 # Step 2: Get project
@@ -63,6 +79,11 @@ npx expo prebuild --platform android
 # Step 5: Build
 echo "⚡ Building APK..."
 cd android
+
+# Export JAVA_HOME for Gradle
+export JAVA_HOME
+export PATH
+
 ./gradlew assembleDebug
 
 # Step 6: Deliver
